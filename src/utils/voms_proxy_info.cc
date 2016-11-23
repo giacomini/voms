@@ -62,7 +62,7 @@ extern "C" {
 #include "sslutils.h"
 #include "newformat.h"
 #include "listfunc.h"
-#include "myproxycertinfo.h"
+#include "proxycertinfo.h"
 }
 
 extern int AC_Init(void);

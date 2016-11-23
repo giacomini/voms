@@ -51,7 +51,7 @@ extern "C" {
 static int reload = 0;
 
 void *logh = NULL;
-#include "myproxycertinfo.h"
+#include "proxycertinfo.h"
 }
 
 #include <sstream>

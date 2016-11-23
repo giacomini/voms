@@ -39,7 +39,8 @@ extern "C" {
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <errno.h>
-
+#include <string.h>
+  
 #include "listfunc.h"
 #include "credentials.h"
 #include "replace.h"
@@ -66,7 +67,7 @@ extern "C" {
 
 extern "C" 
 {
-#include "myproxycertinfo.h"
+  //#include "myproxycertinfo.h"
 #include "vomsproxy.h"
 }
 
