@@ -40,7 +40,7 @@
 #include <openssl/bio.h>
 
 #include "vomsproxy.h"
-#include "myproxycertinfo.h"
+#include "proxycertinfo.h"
 #include "sslutils.h"
 #include "doio.h"
 
@@ -394,8 +394,8 @@ struct VOMSProxy *VOMS_MakeProxy(struct VOMSProxyArguments *args, int *warning, 
   /* PCI extension */
   
   if (args->proxyversion>=3) {
-    myPROXYPOLICY *                     proxypolicy;
-    myPROXYCERTINFO *                   proxycertinfo = NULL;
+    PROXYPOLICY *                       proxypolicy;
+    PROXYCERTINFO *                     proxycertinfo = NULL;
     ASN1_OBJECT *                       policy_language;
 
     /* getting contents of policy file */
@@ -449,30 +449,31 @@ struct VOMSProxy *VOMS_MakeProxy(struct VOMSProxyArguments *args, int *warning, 
     if (args->proxyversion == 3 || (args->proxyversion == 4 && !nativeopenssl)) {
       /* proxypolicy */
     
-      proxypolicy = myPROXYPOLICY_new();
+      proxypolicy = PROXYPOLICY_new();
 
       if (policy) {
-        myPROXYPOLICY_set_policy(proxypolicy, (unsigned char*)policy, policysize);
+        PROXYPOLICY_set_policy(proxypolicy, (unsigned char*)policy, policysize);
         free(policy);
         policy = NULL;
       }
       else if (args->policytext)
-        myPROXYPOLICY_set_policy(proxypolicy, 
+        PROXYPOLICY_set_policy(proxypolicy, 
                                  (unsigned char*)args->policytext, 
                                  strlen(args->policytext));
 
-      myPROXYPOLICY_set_policy_language(proxypolicy, policy_language);
+      PROXYPOLICY_set_policy_language(proxypolicy, policy_language);
 
       /* proxycertinfo */
     
-      proxycertinfo = myPROXYCERTINFO_new();
-      myPROXYCERTINFO_set_version(proxycertinfo, args->proxyversion);
-      myPROXYCERTINFO_set_proxypolicy(proxycertinfo, proxypolicy);
+      proxycertinfo = PROXYCERTINFO_new();
+#warning is the call to PROXYCERTINFO_set_version needed/useful?
+      /* PROXYCERTINFO_set_version(proxycertinfo, args->proxyversion); */
+      PROXYCERTINFO_set_proxypolicy(proxycertinfo, proxypolicy);
 
-      myPROXYPOLICY_free(proxypolicy);
+      PROXYPOLICY_free(proxypolicy);
 
       if (args->pathlength>=0)
-        myPROXYCERTINFO_set_path_length(proxycertinfo, args->pathlength);
+        PROXYCERTINFO_set_path_length(proxycertinfo, args->pathlength);
 
       value = (char *)proxycertinfo;
     }

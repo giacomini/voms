@@ -33,7 +33,7 @@ Description:
 
 #include "config.h"
 #include "replace.h"
-#include "myproxycertinfo.h"
+#include "proxycertinfo.h"
 #include "sslutils.h"
 #include "parsertypes.h"
 #include "doio.h"
@@ -508,7 +508,7 @@ ERR_load_prxyerr_strings(
             RAND_load_file(randfile,1024L*1024L);
         }
 
-#if SSLEAY_VERSION_NUMBER >=  0x0090581fL
+#if SSLEAY_VERSION_NUMBER >=  0x0090581fL && !defined(OPENSSL_NO_EGD)
         /*
          * Try to use the Entropy Garthering Deamon
          * See the OpenSSL crypto/rand/rand_egd.c
@@ -2001,11 +2001,10 @@ proxy_verify_callback(
     {
         for (i=0; i < sk_X509_num(X509_STORE_CTX_get0_chain(ctx)); i++)
         {
-#warning the following does not compile, comment for now
-            /* cert = sk_X509_value(X509_STORE_CTX_get0_chain(ctx),i); */
-            /* if (((i - pvd->proxy_depth) > 1) && (cert->ex_pathlen != -1) */
-            /*     && ((i - pvd->proxy_depth) > (cert->ex_pathlen + 1)) */
-            /*     && (cert->ex_flags & EXFLAG_BCONS)) */
+            cert = sk_X509_value(X509_STORE_CTX_get0_chain(ctx),i);
+            if (((i - pvd->proxy_depth) > 1) && (X509_get_proxy_pathlen(cert) != -1)
+                && ((i - pvd->proxy_depth) > (X509_get_proxy_pathlen(cert) + 1))
+                && (X509_get_extension_flags(cert) & EXFLAG_BCONS))
             {
               X509_STORE_CTX_set_current_cert(ctx, cert); /* point at failing cert */
               X509_STORE_CTX_set_error(ctx, X509_V_ERR_PATH_LENGTH_EXCEEDED);
