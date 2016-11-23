@@ -38,10 +38,13 @@
 #endif
 #endif
 
+#define IMPL_STACK(type) DEFINE_STACK_OF(type)
+
+#if 0
+
 # define PREDECLARE_STACK_OF(type) STACK_OF(type);
 
 #define IMPL_STACK(type) \
-   DECLARE_STACK_OF(type) \
    STACK_OF(type) *sk_##type##_new (int (*cmp)(const type * const *, const type * const *)) \
        { return sk_new ( (int (*)(const char * const *, const char * const *))cmp);} \
    STACK_OF(type) *sk_##type##_new_null () { return sk_new_null(); } \
@@ -82,6 +85,6 @@
    extern unsigned char *ASN1_seq_pack_##type (STACK_OF(type) *, int (*)(), unsigned char **, int *); \
    extern STACK_OF(type) *ASN1_seq_unpack_##type (unsigned char *, int, type *(*)(), void (*)(type *)) ;
 
-
+#endif
 
 #endif
