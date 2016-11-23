@@ -40,6 +40,7 @@
 #include "acerrors.h"
 #include "attributes.h"
 #include <string.h>
+#include <assert.h>
 
 #ifndef VOMS_MAYBECONST
 #if defined(D2I_OF)
@@ -48,6 +49,8 @@
 #define VOMS_MAYBECONST
 #endif
 #endif
+
+#if 0
 
 int i2d_AC_SEQ(AC_SEQ *a, unsigned char **pp)
 {
@@ -355,6 +358,8 @@ void AC_FULL_ATTRIBUTES_free(AC_FULL_ATTRIBUTES *a)
   OPENSSL_free(a);
 }
 
+#endif
+
 static char *norep()
 {
   static char *buffer = 0;
@@ -515,9 +520,13 @@ void *authkey_s2i(UNUSED(struct v3_ext_method *method), UNUSED(struct v3_ext_ctx
   AUTHORITY_KEYID *keyid = AUTHORITY_KEYID_new();
 
   if (str && keyid) {
-    SHA1(cert->cert_info->key->public_key->data,
-	 cert->cert_info->key->public_key->length,
-	 digest);
+    X509_PUBKEY* pk = X509_get_X509_PUBKEY(cert);
+    assert(pk != NULL && "X509_get_X509_PUBKEY failed");
+    unsigned char const* data;
+    int len;
+    int e = X509_PUBKEY_get0_param(NULL, &data, &len, NULL, pk);
+    assert(e == 1 && "X509_PUBKEY_get0_param failed");
+    SHA1(data, len, digest);
     ASN1_OCTET_STRING_set(str, digest, 20);
     ASN1_OCTET_STRING_free(keyid->keyid);
     keyid->keyid = str;
