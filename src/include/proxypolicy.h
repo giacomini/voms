@@ -69,6 +69,18 @@ extern "C" {
 #define ASN1_F_PROXYPOLICY_NEW          450
 #define ASN1_F_D2I_PROXYPOLICY          451
 
+  int PROXY_POLICY_set_policy_language(
+      PROXY_POLICY *                       policy
+    , ASN1_OBJECT *                       policy_language);
+  
+  int PROXY_POLICY_set_policy(
+      PROXY_POLICY *                       proxypolicy
+    , unsigned char *                     policy
+    , int                                 length);
+
+  PROXY_POLICY* PROXY_POLICY_dup(PROXY_POLICY* policy);
+  
+#if 0
 /* data structures */
 
 /**
@@ -142,6 +154,8 @@ STACK_OF(CONF_VALUE) * i2v_PROXYPOLICY(
     struct v3_ext_method *              method,
     PROXYPOLICY *                       ext,
     STACK_OF(CONF_VALUE) *              extlist);
+
+#endif
 
 #ifdef __cplusplus
 }

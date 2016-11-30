@@ -475,7 +475,8 @@ ERR_load_prxyerr_strings(
         OBJ_create("1.3.6.1.4.1.3536.1.1.1.2","DELEGATE","Delegate");
         OBJ_create("1.3.6.1.4.1.3536.1.1.1.3","RESTRICTEDRIGHTS",
                    "RestrictedRights");
-        OBJ_create("0.9.2342.19200300.100.1.1","USERID","userId");
+#warning the OBJ with OID 0.9.2342.19200300.100.1.1 already exists
+        /* OBJ_create("0.9.2342.19200300.100.1.1","USERID","userId"); */
 
         ERR_load_strings(ERR_USER_LIB_PRXYERR_NUMBER,prxyerr_str_functs);
         ERR_load_strings(ERR_USER_LIB_PRXYERR_NUMBER,prxyerr_str_reasons);
@@ -632,7 +633,7 @@ proxy_load_user_proxy(
         x = PEM_read_bio_X509(in,NULL, OPENSSL_PEM_CB(NULL,NULL));
         if (x == NULL)
         {
-            if ((ERR_GET_REASON(ERR_peek_error()) ==
+            if ((ERR_GET_REASON(ERR_peek_last_error()) ==
                  PEM_R_NO_START_LINE) && (count > 0))
             {
                 ERR_clear_error();
@@ -646,31 +647,20 @@ proxy_load_user_proxy(
         }
 
         if (count) {
-          (void)sk_X509_insert(cert_chain,x,sk_X509_num(cert_chain));
-
-          x = NULL;
+          (void)sk_X509_push(cert_chain,x);
+        } else {
+          X509_free(x);
         }
 
         count++;
 
-        if (x)
-        {
-            X509_free(x);
-            x = NULL;
-        }
     }
     ret = count;
 
 err:
-    if (x != NULL)
-    {
-        X509_free(x);
-    }
+    X509_free(x);
+    BIO_free(in);
 
-    if (in != NULL)
-    {
-        BIO_free(in);
-    }
     return(ret);
 }
 
@@ -1481,6 +1471,7 @@ proxy_verify_init(
     pvd->cert_chain = NULL;
     pvd->limited_proxy = 0;
     pvd->multiple_limited_proxy_ok = 0;
+#warning pvd->cert_store/recursive_depth are not set
 }
 
 /**********************************************************************
@@ -2115,7 +2106,7 @@ proxy_verify_cert_chain(
 
     scert = ucert;
     cert_store = X509_STORE_new();
-    X509_STORE_set_verify_cb_func(cert_store, proxy_verify_callback);
+    X509_STORE_set_verify_cb(cert_store, proxy_verify_callback);
 #if SSLEAY_VERSION_NUMBER >=  0x0090600fL
     /* override the check_issued with our version */
     X509_STORE_set_check_issued(cert_store, proxy_check_issued);
@@ -3168,8 +3159,8 @@ proxy_load_user_key(
         {
             mismatch=1;
         }
-
-        EVP_PKEY_free(ucertpkey);
+#warning ucertpkey should not be freed
+        /* EVP_PKEY_free(ucertpkey); */
 
         if (mismatch)
         {
@@ -3467,7 +3458,7 @@ int load_credentials(const char *certname, const char *keyname,
 
 err:
   if (chain)
-    sk_X509_free(chain);
+    sk_X509_pop_free(chain, X509_free);
   if (cert) {
     X509_free(*cert);
     *cert = NULL;
@@ -3725,10 +3716,10 @@ static int check_critical_extensions(X509 *cert, int itsaproxy)
   int nid;
   X509_EXTENSION *ex;
 
-  int nid_pci3 = my_txt2nid(PROXYCERTINFO_V3);
-  int nid_pci4 = my_txt2nid(PROXYCERTINFO_V4);
+  int nid_pci3 = my_txt2nid(PROXYCERTINFO_OLD_OID);
+  int nid_pci4 = my_txt2nid(PROXYCERTINFO_OID);
 
-  STACK_OF(X509_EXTENSION) *extensions = X509_get0_extensions(cert);
+  STACK_OF(X509_EXTENSION) const* extensions = X509_get0_extensions(cert);
 
   for (i=0; i < sk_X509_EXTENSION_num(extensions); i++) {
     ex = (X509_EXTENSION *) sk_X509_EXTENSION_value(extensions,i);

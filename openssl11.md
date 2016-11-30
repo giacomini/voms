@@ -401,8 +401,9 @@ becomes
 
 
 
+## Encoding/decoding
 
-## Macros that don't exist anymore
+### Macros that don't exist anymore
 
     M_ASN1_I2D_vars
     M_ASN1_I2D_len
@@ -422,8 +423,6 @@ becomes
     M_ASN1_I2D_put_EXP_opt
     M_ASN1_D2I_get_EXP_opt
 
-unknown type
+### use DECLARE/IMPLEMENT_ASN1_FUNCTIONS
 
-ASN1_CTX
-
-Macro
+XXX_new(), where XXX is a sequence, recursively `new`s its fields.

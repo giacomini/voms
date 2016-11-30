@@ -615,6 +615,9 @@ void Client::CleanAll()
     delete v;
 
   OBJ_cleanup();
+
+#warning if X509V3_EXT_cleanup is called valgrind moves some "still reachable" to "definitely lost"!
+  // X509V3_EXT_cleanup();
 }
 
 Client::~Client() 
