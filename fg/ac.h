@@ -34,7 +34,7 @@ typedef struct ACACI {
 } AC_ACI;
 
 typedef struct ACHOLDER {
-  AC_IS         *baseid;
+  AC_IS         *baseid;  // only this is valid and must be present
   STACK_OF(GENERAL_NAMES) *name;
   AC_DIGEST     *digest;
 } AC_HOLDER;
@@ -82,6 +82,9 @@ typedef struct ACATTR {
   STACK_OF(AC_FULL_ATTRIBUTES) *fullattributes;
 } AC_ATTR;
 
+DEFINE_STACK_OF(AC_ATTR);
+typedef STACK_OF(AC_ATTR) AC_ATTRS;
+
 typedef struct ACINFO {
   ASN1_INTEGER             *version;
   AC_HOLDER                *holder;
@@ -89,9 +92,9 @@ typedef struct ACINFO {
   X509_ALGOR               *alg;
   ASN1_INTEGER             *serial;
   AC_VAL                   *validity;
-  STACK_OF(AC_ATTR)        *attrib;
+  AC_ATTRS        *attrib;
   ASN1_BIT_STRING          *id;
-  STACK_OF(X509_EXTENSION) *exts;
+  X509_EXTENSIONS *exts;
 } AC_INFO;
 
 typedef struct ACC {
@@ -108,6 +111,7 @@ typedef struct ACCERTS {
   STACK_OF(X509) *stackcert;
 } AC_CERTS;
 
+DECLARE_ASN1_FUNCTIONS(AC_ATTRS)
 DECLARE_ASN1_FUNCTIONS(AC_DIGEST)
 DECLARE_ASN1_FUNCTIONS(AC_IS)
 DECLARE_ASN1_FUNCTIONS(AC_FORM)
