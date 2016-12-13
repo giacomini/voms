@@ -37,6 +37,11 @@ std::ostream& operator<<(std::ostream& os, octet_span const& s)
   return os;
 }
 
+int i2d_AC_fp(FILE *fp, AC* s)
+{
+    return ASN1_item_i2d_fp(ASN1_ITEM_rptr(AC), fp, s);
+}
+
 int main()
 { 
   std::ifstream f("ac.der", std::ios::binary);
@@ -179,5 +184,10 @@ int main()
     auto l = 2272;
     auto o = d2i_AC(0, &p, l);
     assert(o != nullptr);
+
+    FILE* f = fopen("ac-out.der", "wb");
+    assert(f);
+    auto e = i2d_AC_fp(f, o);
+    assert(e);
   }
 }
