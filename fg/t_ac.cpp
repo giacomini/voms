@@ -57,6 +57,36 @@ int main()
     assert(o != nullptr);
   }
   {
+    auto p = data.data() + 233;
+    auto l = 223;
+    auto o = d2i_AC_ATTRS(0, &p, l);
+    assert(o != nullptr);
+  }
+  {
+    auto p = data.data() + 239;
+    auto l = 12;
+    auto o = d2i_ASN1_OBJECT(0, &p, l);
+    assert(o != nullptr);
+  }
+  {
+    auto p = data.data() + 259;
+    auto l = 38;
+    auto o = d2i_GENERAL_NAME(0, &p, l);
+    assert(o != nullptr);
+  }
+  {
+    auto p = data.data() + 300;
+    auto l = 36;
+    auto o = d2i_ASN1_OCTET_STRING(0, &p, l);
+    assert(o != nullptr);
+  }
+  {
+    auto p = data.data() + 254;
+    auto l = 202;
+    auto o = d2i_AC_IETFATTR(0, &p, l);
+    assert(o != nullptr);
+  }
+  {
     auto p = data.data() + 4;
     auto l = 1992;
     auto o = d2i_AC_INFO(0, &p, l);

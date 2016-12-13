@@ -2,10 +2,8 @@
 #define VOMS_AC_H
 
 #include <openssl/asn1.h>
-// #include <openssl/x509.h>
+#include <openssl/x509.h>
 #include <openssl/x509v3.h>
-// #include <openssl/stack.h>
-// #include <openssl/safestack.h>
 
 #include <openssl/asn1t.h>
 
@@ -44,11 +42,17 @@ typedef struct ACVAL {
   ASN1_GENERALIZEDTIME *notAfter;
 } AC_VAL;
 
-typedef ASN1_STRING AC_IETFATTRVAL;
+// typedef ASN1_STRING AC_IETFATTRVAL;
+
+DEFINE_STACK_OF(ASN1_OCTET_STRING);
+typedef STACK_OF(ASN1_OCTET_STRING) OctetStrings;
+
+DECLARE_ASN1_FUNCTIONS(OctetStrings);
 
 typedef struct ACIETFATTR {
   GENERAL_NAMES   *names;
-  STACK_OF(AC_IETFATTRVAL) *values;
+  //  STACK_OF(AC_IETFATTRVAL) *values;
+  OctetStrings *values;
 } AC_IETFATTR;
 
 typedef struct ACTARGET {
@@ -88,7 +92,7 @@ typedef STACK_OF(AC_ATTR) AC_ATTRS;
 typedef struct ACINFO {
   ASN1_INTEGER             *version;
   AC_HOLDER                *holder;
-  AC_FORM                  *form;
+  GENERAL_NAMES                  *form;
   X509_ALGOR               *alg;
   ASN1_INTEGER             *serial;
   AC_VAL                   *validity;
@@ -118,7 +122,7 @@ DECLARE_ASN1_FUNCTIONS(AC_FORM)
 DECLARE_ASN1_FUNCTIONS(AC_ACI)
 DECLARE_ASN1_FUNCTIONS(AC_HOLDER)
 DECLARE_ASN1_FUNCTIONS(AC_VAL)
-DECLARE_ASN1_FUNCTIONS_name(ASN1_STRING, AC_IETFATTRVAL)
+// DECLARE_ASN1_FUNCTIONS_name(ASN1_STRING, AC_IETFATTRVAL)
 DECLARE_ASN1_FUNCTIONS(AC_IETFATTR)
 DECLARE_ASN1_FUNCTIONS(AC_TARGET)
 DECLARE_ASN1_FUNCTIONS(AC_TARGETS)
