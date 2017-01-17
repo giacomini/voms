@@ -51,19 +51,19 @@ typedef struct ACDIGEST {
 } AC_DIGEST;
 
 typedef struct ACIS {
-  STACK_OF(GENERAL_NAME) *issuer;
+  GENERAL_NAMES *issuer;
   ASN1_INTEGER  *serial;
   ASN1_BIT_STRING *uid;
 } AC_IS;
 
 typedef struct ACFORM {
-  STACK_OF(GENERAL_NAME) *names;
+  GENERAL_NAMES *names;
   AC_IS         *is;
   AC_DIGEST     *digest;
 } AC_FORM;
 
 typedef struct ACACI {
-  STACK_OF(GENERAL_NAME) *names;
+  GENERAL_NAMES *names;
   AC_FORM       *form;
 } AC_ACI;
 
@@ -78,11 +78,15 @@ typedef struct ACVAL {
   ASN1_GENERALIZEDTIME *notAfter;
 } AC_VAL;
 
-typedef struct asn1_string_st AC_IETFATTRVAL;
+typedef ASN1_OCTET_STRING AC_IETFATTRVAL;
+DEFINE_STACK_OF(AC_IETFATTRVAL);
+typedef STACK_OF(AC_IETFATTRVAL) OctetStrings;
+
+DECLARE_ASN1_FUNCTIONS(OctetStrings);
 
 typedef struct ACIETFATTR {
-  STACK_OF(GENERAL_NAME)   *names;
-  STACK_OF(AC_IETFATTRVAL) *values;
+  GENERAL_NAMES   *names;
+  OctetStrings *values;
 } AC_IETFATTR;
 
 typedef struct ACTARGET {
@@ -97,23 +101,23 @@ typedef struct ACTARGETS {
 
 typedef struct ACATTR {
   ASN1_OBJECT * type;
-  int get_type;
   STACK_OF(AC_IETFATTR) *ietfattr;
   STACK_OF(AC_FULL_ATTRIBUTES) *fullattributes;
 } AC_ATTR;
-#define GET_TYPE_FQAN 1
-#define GET_TYPE_ATTRIBUTES 2
+
+DEFINE_STACK_OF(AC_ATTR);
+typedef STACK_OF(AC_ATTR) AC_ATTRS;
 
 typedef struct ACINFO {
   ASN1_INTEGER             *version;
   AC_HOLDER                *holder;
-  AC_FORM                  *form;
+  GENERAL_NAMES            *form;
   X509_ALGOR               *alg;
   ASN1_INTEGER             *serial;
   AC_VAL                   *validity;
-  STACK_OF(AC_ATTR)        *attrib;
+  AC_ATTRS                 *attrib;
   ASN1_BIT_STRING          *id;
-  STACK_OF(X509_EXTENSION) *exts;
+  X509_EXTENSIONS          *exts;
 } AC_INFO;
 
 typedef struct ACC {
@@ -130,13 +134,13 @@ typedef struct ACCERTS {
   STACK_OF(X509) *stackcert;
 } AC_CERTS;
 
+DECLARE_ASN1_FUNCTIONS(AC_ATTRS)
 DECLARE_ASN1_FUNCTIONS(AC_DIGEST)
 DECLARE_ASN1_FUNCTIONS(AC_IS)
 DECLARE_ASN1_FUNCTIONS(AC_FORM)
 DECLARE_ASN1_FUNCTIONS(AC_ACI)
 DECLARE_ASN1_FUNCTIONS(AC_HOLDER)
 DECLARE_ASN1_FUNCTIONS(AC_VAL)
-DECLARE_ASN1_FUNCTIONS_name(ASN1_STRING, AC_IETFATTRVAL)
 DECLARE_ASN1_FUNCTIONS(AC_IETFATTR)
 DECLARE_ASN1_FUNCTIONS(AC_TARGET)
 DECLARE_ASN1_FUNCTIONS(AC_TARGETS)
@@ -146,12 +150,7 @@ DECLARE_ASN1_FUNCTIONS(AC)
 DECLARE_ASN1_FUNCTIONS(AC_SEQ)
 DECLARE_ASN1_FUNCTIONS(AC_CERTS)
 
-/* there is no DECLARE_ASN1_DUP_FUNCTION */
-AC* AC_dup(AC* x);
-
-DEFINE_STACK_OF(AC_ATTR)
 DEFINE_STACK_OF(AC_IETFATTR)
-DEFINE_STACK_OF(AC_IETFATTRVAL)
 DEFINE_STACK_OF(AC)
 DEFINE_STACK_OF(AC_TARGET)
 
@@ -238,9 +237,9 @@ extern AC_CERTS *d2i_AC_CERTS(AC_CERTS **a, VOMS_MAYBECONST unsigned char **pp, 
 extern AC_CERTS *AC_CERTS_new(void);
 extern void AC_CERTS_free(AC_CERTS *a);
 
-extern AC *AC_dup(AC *ac);
-
 #endif
+
+extern AC *AC_dup(AC *ac);
 
 extern EVP_PKEY *EVP_PKEY_dup(EVP_PKEY *pkey);
 

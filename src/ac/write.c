@@ -179,7 +179,6 @@ int writeac(X509 *issuerc, STACK_OF(X509) *issuerstack, X509 *holder, EVP_PKEY *
     capnames = NULL;
   }
 
-  capabilities->get_type = GET_TYPE_FQAN;
   ASN1_OBJECT_free(capabilities->type);
   capabilities->type = cobj;
 
@@ -336,7 +335,7 @@ int writeac(X509 *issuerc, STACK_OF(X509) *issuerstack, X509 *holder, EVP_PKEY *
   sk_GENERAL_NAME_push(a->acinfo->holder->baseid->issuer, dirn);
   dirn2->d.dirn = issdup;
   dirn2->type = GEN_DIRNAME;
-  sk_GENERAL_NAME_push(a->acinfo->form->names, dirn2);
+  sk_GENERAL_NAME_push(a->acinfo->form, dirn2);
   a->acinfo->id = uid;
 
   /* Use same signature algorithm used to sign the certificate */

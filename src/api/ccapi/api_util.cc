@@ -45,6 +45,7 @@ extern "C" {
 #include <openssl/evp.h>
 #include "credentials.h"
 #include "sslutils.h"
+#include "newformat.h"
 }
 
 #include <string>

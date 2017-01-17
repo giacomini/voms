@@ -219,9 +219,6 @@ int validate(X509 *cert, X509 *issuer, AC *ac, voms &v, verify_type valids, time
     CHECK(ac->acinfo->holder);
     NCHECK(ac->acinfo->holder->digest);
     CHECK(ac->acinfo->form);
-    CHECK(ac->acinfo->form->names);
-    NCHECK(ac->acinfo->form->is);
-    NCHECK(ac->acinfo->form->digest);
     CHECK(ac->acinfo->serial);
     CHECK(ac->acinfo->validity);
     CHECK(ac->acinfo->alg);
@@ -266,7 +263,7 @@ int validate(X509 *cert, X509 *issuer, AC *ac, voms &v, verify_type valids, time
     CTOCPPSTR(v.serverca, X509_NAME_oneline(X509_get_issuer_name(issuer), NULL, 0));
   }
   else {
-    CTOCPPSTR(v.server, X509_NAME_oneline(sk_GENERAL_NAME_value(ac->acinfo->form->names, 0)->d.dirn,NULL, 0));
+    CTOCPPSTR(v.server, X509_NAME_oneline(sk_GENERAL_NAME_value(ac->acinfo->form, 0)->d.dirn,NULL, 0));
     v.serverca   = "Unable to determine CA";
   }
 
@@ -321,7 +318,7 @@ int validate(X509 *cert, X509 *issuer, AC *ac, voms &v, verify_type valids, time
       }
     }
 
-    names = ac->acinfo->form->names;
+    names = ac->acinfo->form;
 
     if ((sk_GENERAL_NAME_num(names) != 1))
       ERROR(AC_ERR_ISSUER_NAME);
