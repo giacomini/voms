@@ -566,6 +566,7 @@ int initEx(void)
   }
 
   memset(auth, 0, sizeof(*auth));
+
   auth->ext_nid  = OBJ_txt2nid("authKeyId");
   auth->ext_flags = 0;
   auth->ext_new  = (X509V3_EXT_NEW) AUTHORITY_KEYID_new;
@@ -580,7 +581,7 @@ int initEx(void)
   auth->i2r      = (X509V3_EXT_I2R) NULL;
 
   memset(avail, 0, sizeof(*avail));
-  avail->ext_nid  = OBJ_txt2nid("idcenoRevAvail");
+  avail->ext_nid  = OBJ_txt2nid("noRevAvail");
   avail->ext_flags = 0;
   avail->ext_new  = (X509V3_EXT_NEW) ASN1_NULL_new;
   avail->ext_free = (X509V3_EXT_FREE)ASN1_NULL_free;
@@ -594,7 +595,7 @@ int initEx(void)
   avail->i2r      = (X509V3_EXT_I2R) NULL;
 
   memset(targets, 0, sizeof(*targets));
-  targets->ext_nid  = OBJ_txt2nid("idceTargets");
+  targets->ext_nid  = OBJ_txt2nid("targetInformation");
   targets->ext_flags = 0;
   targets->ext_new  = (X509V3_EXT_NEW) AC_TARGETS_new;
   targets->ext_free = (X509V3_EXT_FREE)AC_TARGETS_free;

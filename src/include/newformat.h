@@ -80,13 +80,13 @@ typedef struct ACVAL {
 
 typedef ASN1_OCTET_STRING AC_IETFATTRVAL;
 DEFINE_STACK_OF(AC_IETFATTRVAL);
-typedef STACK_OF(AC_IETFATTRVAL) OctetStrings;
 
-DECLARE_ASN1_FUNCTIONS(OctetStrings);
+// typedef STACK_OF(AC_IETFATTRVAL) OctetStrings;
+// DECLARE_ASN1_FUNCTIONS(OctetStrings);
 
 typedef struct ACIETFATTR {
-  GENERAL_NAMES   *names;
-  OctetStrings *values;
+  GENERAL_NAMES *names;
+  STACK_OF(AC_IETFATTRVAL) *values;
 } AC_IETFATTR;
 
 typedef struct ACTARGET {

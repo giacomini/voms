@@ -42,16 +42,22 @@
 
 static int make_and_push_ext(AC *ac, char *name, char *data, int critical)
 {
-  X509_EXTENSION *ext = X509V3_EXT_conf_nid(NULL, NULL, OBJ_txt2nid(name), data);
 
-  if (ext) {
-    X509_EXTENSION_set_critical(ext, critical);
-    sk_X509_EXTENSION_push(ac->acinfo->exts, ext);
-    return 0;
+  int ext_NID = OBJ_txt2nid(name);
+
+  if (ext_NID == NID_undef ){
+    return AC_ERR_NO_EXTENSION;
   }
 
-  X509_EXTENSION_free(ext);
-  return AC_ERR_NO_EXTENSION;
+  X509_EXTENSION *ext = X509V3_EXT_conf_nid(NULL, NULL, ext_NID, data);
+
+  if (!ext) {
+    return AC_ERR_NO_EXTENSION;
+  }
+
+  X509_EXTENSION_set_critical(ext, critical);
+  sk_X509_EXTENSION_push(ac->acinfo->exts, ext);
+  return 0;
 }
 
 static void make_uri(const char *vo, const char *uri, STACK_OF(GENERAL_NAME) *names)
@@ -159,13 +165,22 @@ int writeac(X509 *issuerc, STACK_OF(X509) *issuerstack, X509 *holder, EVP_PKEY *
       !null || !ac_full_attrs || !ac_att_holder)
     ERROR(AC_ERR_MEMORY);
 
+  if (capnames->names == NULL) {
+    capnames->names = GENERAL_NAMES_new();
+
+    if (capnames->names == NULL){
+      ERROR(AC_ERR_MEMORY);
+    }
+  }
+
   /* prepare AC_IETFATTR */
   while(fqan[i]) {
     ASN1_OCTET_STRING *tmpc = ASN1_OCTET_STRING_new();
+
     if (!tmpc) {
-      ASN1_OCTET_STRING_free(tmpc);
       ERROR(AC_ERR_MEMORY);
     }
+
     ASN1_OCTET_STRING_set(tmpc, (unsigned char*)fqan[i], strlen(fqan[i]));
     sk_AC_IETFATTRVAL_push(capnames->values, (AC_IETFATTRVAL *)tmpc);
     i++;
@@ -174,7 +189,6 @@ int writeac(X509 *issuerc, STACK_OF(X509) *issuerstack, X509 *holder, EVP_PKEY *
   if (vo || uri) {
     make_uri(vo, uri, capnames->names);
 
-    /* stuff the created AC_IETFATTR in ietfattr (values) and define its object */
     sk_AC_IETFATTR_push(capabilities->ietfattr, capnames);
     capnames = NULL;
   }
@@ -183,6 +197,7 @@ int writeac(X509 *issuerc, STACK_OF(X509) *issuerstack, X509 *holder, EVP_PKEY *
   capabilities->type = cobj;
 
   i = 0;
+
   /* prepare AC_FULL_ATTRIBUTES */
   if (attributes_strings) {
     while (attributes_strings[i]) {
@@ -232,9 +247,10 @@ int writeac(X509 *issuerc, STACK_OF(X509) *issuerstack, X509 *holder, EVP_PKEY *
     }
   }
 
-  if (!i) 
+  if (!i) {
     AC_ATT_HOLDER_free(ac_att_holder);
-  else {
+    ac_att_holder = NULL;
+  } else {
     make_uri(vo, uri,  ac_att_holder->grantor);
     sk_AC_ATT_HOLDER_push(ac_full_attrs->providers, ac_att_holder);
   }  
@@ -252,8 +268,10 @@ int writeac(X509 *issuerc, STACK_OF(X509) *issuerstack, X509 *holder, EVP_PKEY *
     if (ret)
       ERROR(AC_ERR_NO_EXTENSION);
   }
-  else
+  else {
     AC_FULL_ATTRIBUTES_free(ac_full_attrs);
+    ac_full_attrs = NULL;
+  }
 
   stk = sk_X509_new_null();
 
@@ -277,13 +295,13 @@ int writeac(X509 *issuerc, STACK_OF(X509) *issuerstack, X509 *holder, EVP_PKEY *
     ERROR(AC_ERR_NO_EXTENSION);
 
   /* Create several extensions */
-  if (make_and_push_ext(a, "idcenoRevAvail", "loc", 0))
+  if (make_and_push_ext(a, "noRevAvail","loc", 0))
     ERROR(AC_ERR_NO_EXTENSION);
 
   if (make_and_push_ext(a, "authKeyId", (char *)issuerc, 0))
     ERROR(AC_ERR_NO_EXTENSION);
 
-  if (t && make_and_push_ext(a, "idceTargets", t, 1))
+  if (t && make_and_push_ext(a, "targetInformation", t, 1))
     ERROR(AC_ERR_NO_EXTENSION);
 
   if (extensions) {

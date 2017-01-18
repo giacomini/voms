@@ -66,12 +66,18 @@ void declareOIDs(void)
     return;
 
   done=1;
+
   OBJC(idatcap,"idatcap");
-  /*  //// test */
+
   OBJC(attributes,"attributes");
-  OBJC(idcenoRevAvail, "noRevAvail");
+
   OBJC(idceauthKeyIdentifier, "authKeyId");
-  OBJC(idceTargets, "idceTargets");
+
+  /*
+  OBJC(idcenoRevAvail, "noRevAvail");
+  OBJC(idceTargets, "targetInformation");
+  */
+
   OBJC(acseq, "acseq");
   OBJC(order, "order");
   OBJC(voms, "voms");
