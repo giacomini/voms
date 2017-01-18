@@ -511,7 +511,7 @@ struct VOMSProxy *VOMS_MakeProxy(struct VOMSProxyArguments *args, int *warning, 
       int len;
       ASN1_OCTET_STRING* oct = NULL;
       int v3nid = my_txt2nid(PROXYCERTINFO_OLD_OID);
-      X509V3_EXT_METHOD* method = X509V3_EXT_get_nid(v3nid);
+      X509V3_EXT_METHOD const* method = X509V3_EXT_get_nid(v3nid);
 
       assert(method != NULL && "X509V3_EXT_get_nid failed");
       assert(method->it != NULL && "method->it cannot be null");

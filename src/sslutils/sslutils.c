@@ -948,7 +948,7 @@ proxy_sign(
         PRXYerr(PRXYERR_F_PROXY_SIGN,PRXYERR_R_PROCESS_SIGN);
         if (proxyver >= 3) {
           free(newcn);
-	  free(newserial);
+	  free((void*)newserial);
 	}
         return 1;
       }
@@ -986,7 +986,7 @@ proxy_sign(
 
     if (proxyver >= 3) {
       free(newcn);
-      free(newserial);
+      free((void*)newserial);
     }
 
     return rc;

@@ -303,11 +303,11 @@ int writeac(X509 *issuerc, STACK_OF(X509) *issuerstack, X509 *holder, EVP_PKEY *
     }
   }
 
-  alg1 = X509_ALGOR_dup(X509_get0_tbs_sigalg(issuerc));//(issuerc->cert_info->signature));
+  alg1 = X509_ALGOR_dup((X509_ALGOR*)X509_get0_tbs_sigalg(issuerc));
   {
     X509_ALGOR const* sig_alg;
     X509_get0_signature(NULL, &sig_alg, issuerc);
-    alg2 = X509_ALGOR_dup(sig_alg);
+    alg2 = X509_ALGOR_dup((X509_ALGOR*)sig_alg);
   }
 
   {

@@ -491,9 +491,9 @@ void *attributes_s2i(UNUSED(struct v3_ext_method *method), UNUSED(struct v3_ext_
 /*     a->providers = sk_AC_ATT_HOLDER_dup(stack); */
     for (i = 0; i < sk_AC_ATT_HOLDER_num(stack); i++) 
       sk_AC_ATT_HOLDER_push(a->providers,
-                            (AC_ATT_HOLDER *)ASN1_dup((int (*)())i2d_AC_ATT_HOLDER,
-                                                      (char * (*)())d2i_AC_ATT_HOLDER, 
-                                                      (char *)(sk_AC_ATT_HOLDER_value(stack, i))));
+                            (AC_ATT_HOLDER *)ASN1_dup((i2d_of_void*)i2d_AC_ATT_HOLDER,
+                                                      (d2i_of_void*)d2i_AC_ATT_HOLDER,
+                                                      sk_AC_ATT_HOLDER_value(stack, i)));
 
     
     return a;
