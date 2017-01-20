@@ -567,7 +567,8 @@ int initEx(void)
 
   memset(auth, 0, sizeof(*auth));
 
-  auth->ext_nid  = OBJ_txt2nid("authKeyId");
+  auth->ext_nid  = OBJ_txt2nid("authorityKeyIdentifier");
+
   auth->ext_flags = 0;
   auth->ext_new  = (X509V3_EXT_NEW) AUTHORITY_KEYID_new;
   auth->ext_free = (X509V3_EXT_FREE)AUTHORITY_KEYID_free;
@@ -579,6 +580,8 @@ int initEx(void)
   auth->r2i      = (X509V3_EXT_R2I) NULL;
   auth->i2v      = (X509V3_EXT_I2V) NULL;
   auth->i2r      = (X509V3_EXT_I2R) NULL;
+
+  X509V3_EXT_add(auth);
 
   memset(avail, 0, sizeof(*avail));
   avail->ext_nid  = OBJ_txt2nid("noRevAvail");
@@ -594,6 +597,8 @@ int initEx(void)
   avail->i2v      = (X509V3_EXT_I2V) NULL;
   avail->i2r      = (X509V3_EXT_I2R) NULL;
 
+  X509V3_EXT_add(avail);
+
   memset(targets, 0, sizeof(*targets));
   targets->ext_nid  = OBJ_txt2nid("targetInformation");
   targets->ext_flags = 0;
@@ -607,6 +612,8 @@ int initEx(void)
   targets->v2i      = (X509V3_EXT_V2I) NULL;
   targets->r2i      = (X509V3_EXT_R2I) NULL;
   targets->i2r      = (X509V3_EXT_I2R) NULL;
+
+  X509V3_EXT_add(targets);
 
   memset(acseq, 0, sizeof(*acseq));
   acseq->ext_nid  = OBJ_txt2nid("acseq");
@@ -622,6 +629,8 @@ int initEx(void)
   acseq->r2i      = (X509V3_EXT_R2I) NULL;
   acseq->i2r      = (X509V3_EXT_I2R) NULL;
 
+  X509V3_EXT_add(acseq);
+
   memset(certseq, 0, sizeof(*certseq));
   certseq->ext_nid  = OBJ_txt2nid("certseq");
   certseq->ext_flags = 0;
@@ -635,6 +644,8 @@ int initEx(void)
   certseq->v2i      = (X509V3_EXT_V2I) NULL;
   certseq->r2i      = (X509V3_EXT_R2I) NULL;
   certseq->i2r      = (X509V3_EXT_I2R) NULL;
+
+  X509V3_EXT_add(certseq);
 
   memset(attribs, 0, sizeof(*attribs));
   attribs->ext_nid  = OBJ_txt2nid("attributes");
@@ -650,11 +661,6 @@ int initEx(void)
   attribs->r2i      = (X509V3_EXT_R2I) NULL;
   attribs->i2r      = (X509V3_EXT_I2R) NULL;
 
-  X509V3_EXT_add(avail);
-  X509V3_EXT_add(targets);
-  X509V3_EXT_add(auth);
-  X509V3_EXT_add(acseq);
-  X509V3_EXT_add(certseq);
   X509V3_EXT_add(attribs);
 
   return 1;

@@ -56,6 +56,19 @@ static int getBitValue(char *bitname);
 static int convertMethod(char *bits, int *warning, void **additional);
 static X509_EXTENSION *get_BasicConstraints(int ca);
 
+AC_SEQ* create_ac_seq(AC** aclist) {
+
+  if (!aclist) return NULL;
+
+  AC_SEQ* seq = AC_SEQ_new();
+
+  while(*aclist) {
+    sk_AC_push(seq->acs, *aclist++);
+  }
+
+  return seq;
+}
+
 struct VOMSProxyArguments *VOMS_MakeProxyArguments()
 {
   return (struct VOMSProxyArguments*)calloc(1, sizeof(struct VOMSProxyArguments));
@@ -234,7 +247,17 @@ struct VOMSProxy *VOMS_MakeProxy(struct VOMSProxyArguments *args, int *warning, 
 
   if (args->aclist) {
 
-    if ((ex5 = X509V3_EXT_conf_nid(NULL, NULL, OBJ_txt2nid("acseq"), (char *)args->aclist)) == NULL) {
+    AC_SEQ* acseq = create_ac_seq(args->aclist);
+
+    if (!acseq){
+      // FIXME: set this error to out of memory
+      PRXYerr(PRXYERR_F_PROXY_SIGN, PRXYERR_R_CLASS_ADD_EXT);
+      goto err;
+    }
+
+    ex5 = X509V3_EXT_i2d(OBJ_txt2nid("acseq"),0, acseq);
+
+    if ( ex5 == NULL) {
       PRXYerr(PRXYERR_F_PROXY_SIGN, PRXYERR_R_CLASS_ADD_EXT);
       goto err;
     }

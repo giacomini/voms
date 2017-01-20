@@ -71,8 +71,6 @@ void declareOIDs(void)
 
   OBJC(attributes,"attributes");
 
-  OBJC(idceauthKeyIdentifier, "authKeyId");
-
   /*
   OBJC(idcenoRevAvail, "noRevAvail");
   OBJC(idceTargets, "targetInformation");

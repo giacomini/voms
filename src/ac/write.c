@@ -27,11 +27,13 @@
 #include "config.h"
 
 #include <openssl/asn1.h>
+#include <openssl/asn1t.h>
 #include <openssl/evp.h>
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
 #include <openssl/bn.h>
 #include <string.h>
+#include <assert.h>
 
 #include "newformat.h"
 #include "acerrors.h"
@@ -39,6 +41,105 @@
 #include "doio.h"
 
 #define ERROR(e) do { err = (e); goto err; } while (0)
+
+/* IMPLEMENT_ASN1_PRINT_FUNCTION(AC) */
+
+int add_authority_key_id_ext(AC *ac, X509* issuer_cert) {
+
+  // Copy akid extension from issuer_cert
+  int ext_loc = X509_get_ext_by_NID(issuer_cert, NID_authority_key_identifier, -1);
+
+  if (ext_loc == -1){
+    return 1;
+  }
+
+  X509_EXTENSION *akid = X509_get_ext(issuer_cert, ext_loc);
+
+  assert( akid != NULL );
+
+  sk_X509_EXTENSION_push(ac->acinfo->exts, akid);
+
+  return 0;
+}
+
+AC_TARGET* build_ac_target(char* t){
+
+    AC_TARGET *target = AC_TARGET_new();
+    GENERAL_NAME *name = GENERAL_NAME_new();
+    ASN1_IA5STRING *target_str = ASN1_IA5STRING_new();
+
+    if (! target || ! name || !target_str) {
+        AC_TARGET_free(target);
+        GENERAL_NAME_free(name);
+        ASN1_IA5STRING_free(target_str);
+        return NULL;
+    }
+
+    ASN1_STRING_set(target_str, t, strlen(t));
+
+    name->type = GEN_URI;
+    name->d.ia5 = target_str;
+
+    target->name = name;
+    return target;
+}
+
+AC_TARGETS* build_ac_targets_ext(char* targets) {
+
+  const char* DELIMITER = ",";
+  char *targets_copy = strdup(targets);
+  char *token;
+
+  AC_TARGETS* ac_targets = AC_TARGETS_new();
+
+  if (! targets_copy || !ac_targets ){
+    goto err;
+  }
+
+  token = strtok(targets_copy, DELIMITER);
+
+  while (token != NULL){
+
+    AC_TARGET *target = build_ac_target(token);
+
+    if (! target ) {
+        goto err;
+    }
+
+    sk_AC_TARGET_push(ac_targets->targets, target);
+    token = strtok(NULL, DELIMITER);
+  }
+
+  free(targets_copy);
+  return ac_targets;
+
+err:
+  
+  if (ac_targets) {
+    AC_TARGETS_free(ac_targets);
+  }
+
+  return NULL;
+}
+
+int add_targets_ext(AC* ac, char* targets_str) {
+
+  AC_TARGETS *targets = build_ac_targets_ext(targets_str);
+
+  if (!targets) {
+    return AC_ERR_NO_EXTENSION;
+  }
+
+  X509_EXTENSION* ext = X509V3_EXT_i2d(NID_target_information,1, targets);
+
+  if (!ext) {
+    return AC_ERR_NO_EXTENSION;
+  }
+
+  sk_X509_EXTENSION_push(ac->acinfo->exts, ext);
+
+  return 0;
+}
 
 static int make_and_push_ext(AC *ac, char *name, char *data, int critical)
 {
@@ -152,7 +253,7 @@ int writeac(X509 *issuerc, STACK_OF(X509) *issuerstack, X509 *holder, EVP_PKEY *
   dirn2               = GENERAL_NAME_new();
   holdserial          = ASN1_INTEGER_dup(X509_get_serialNumber(holder));
   serial              = BN_to_ASN1_INTEGER(s, NULL);
-  version             = BN_to_ASN1_INTEGER((BIGNUM *)(BN_value_one()), NULL);
+  version             = ASN1_INTEGER_new();
   capabilities        = AC_ATTR_new();
   cobj                = OBJ_txt2obj("idatcap",0);
   capnames            = AC_IETFATTR_new();
@@ -160,10 +261,13 @@ int writeac(X509 *issuerc, STACK_OF(X509) *issuerstack, X509 *holder, EVP_PKEY *
   ac_full_attrs       = AC_FULL_ATTRIBUTES_new();
   ac_att_holder       = AC_ATT_HOLDER_new();
 
-  if (!subjdup || !issdup || !dirn || !dirn2 || !holdserial || !serial ||
+  
+  if (!subjdup || !issdup || !dirn || !dirn2 || !holdserial || !serial || !version ||
       !capabilities || !cobj || !capnames || !time1 || !time2 ||
       !null || !ac_full_attrs || !ac_att_holder)
     ERROR(AC_ERR_MEMORY);
+
+  ASN1_INTEGER_set(version,1);
 
   if (capnames->names == NULL) {
     capnames->names = GENERAL_NAMES_new();
@@ -182,7 +286,7 @@ int writeac(X509 *issuerc, STACK_OF(X509) *issuerstack, X509 *holder, EVP_PKEY *
     }
 
     ASN1_OCTET_STRING_set(tmpc, (unsigned char*)fqan[i], strlen(fqan[i]));
-    sk_AC_IETFATTRVAL_push(capnames->values, (AC_IETFATTRVAL *)tmpc);
+    sk_AC_IETFATTRVAL_push(capnames->values, tmpc);
     i++;
   }
 
@@ -267,8 +371,7 @@ int writeac(X509 *issuerc, STACK_OF(X509) *issuerstack, X509 *holder, EVP_PKEY *
 
     if (ret)
       ERROR(AC_ERR_NO_EXTENSION);
-  }
-  else {
+  } else {
     AC_FULL_ATTRIBUTES_free(ac_full_attrs);
     ac_full_attrs = NULL;
   }
@@ -298,11 +401,13 @@ int writeac(X509 *issuerc, STACK_OF(X509) *issuerstack, X509 *holder, EVP_PKEY *
   if (make_and_push_ext(a, "noRevAvail","loc", 0))
     ERROR(AC_ERR_NO_EXTENSION);
 
-  if (make_and_push_ext(a, "authKeyId", (char *)issuerc, 0))
+  if (add_authority_key_id_ext(a,issuerc)){
     ERROR(AC_ERR_NO_EXTENSION);
+  }
 
-  if (t && make_and_push_ext(a, "targetInformation", t, 1))
+  if (t && add_targets_ext(a,t)){
     ERROR(AC_ERR_NO_EXTENSION);
+  }
 
   if (extensions) {
     int proxyindex = 0;
@@ -368,6 +473,12 @@ int writeac(X509 *issuerc, STACK_OF(X509) *issuerstack, X509 *holder, EVP_PKEY *
 	    (char *)a->acinfo, pkey, md);
 
   *ac = a;
+
+  // FIXME: remove me
+  // BIO* out = BIO_new_fp(stdout, BIO_NOCLOSE);
+  // AC_print_ctx(out, a, 0, 0);
+  //
+
   return 0;
 
  err:
