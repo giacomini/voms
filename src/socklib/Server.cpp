@@ -61,6 +61,7 @@ extern "C" {
 #include "log.h"
 #include "vomsssl.h"
 #include "sslutils.h"
+#include "ssl_compat.h"
 }
 
 #include "ipv6sock.h"
@@ -289,7 +290,7 @@ static BIO* make_VOMS_BIO(int sock)
 
   int const biom_type = BIO_get_new_index();
   static char const* const biom_name = "VOMS I/O";
-  BIO_METHOD* voms_biom = BIO_meth_new(biom_type, biom_name);
+  BIO_METHOD* voms_biom = BIO_meth_new(biom_type|BIO_TYPE_SOURCE_SINK|BIO_TYPE_DESCRIPTOR, biom_name);
   assert(voms_biom && "BIO_meth_new failed");
 
   BIO_METHOD const* sock_biom = BIO_s_socket();

@@ -39,6 +39,7 @@ Description:
 #include "doio.h"
 #include "data.h"
 #include "voms_cert_type.h"
+#include "ssl_compat.h"
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -1208,10 +1209,11 @@ proxy_sign_ext(
 
     /* transfer the public key from req to new cert */
     {
-      EVP_PKEY* const pub_key = X509_REQ_get0_pubkey(req);
+      EVP_PKEY* const pub_key = X509_REQ_get_pubkey(req);
       assert(pub_key && "X509_REQ_get0_pubkey failed");
       int const ret = X509_set_pubkey(*new_cert, pub_key);
       assert(ret == 1 && "X509_set_pubkey failed");
+      EVP_PKEY_free(pub_key);
     }
 
     /*
@@ -3100,7 +3102,7 @@ proxy_load_user_key(
      */
     if (ucert)
     {
-        ucertpkey = X509_get0_pubkey(ucert);
+        ucertpkey = X509_get_pubkey(ucert);
         int mismatch = 0;
 
         if (ucertpkey != NULL
@@ -3159,8 +3161,8 @@ proxy_load_user_key(
         {
             mismatch=1;
         }
-#warning ucertpkey should not be freed
-        /* EVP_PKEY_free(ucertpkey); */
+
+        EVP_PKEY_free(ucertpkey);
 
         if (mismatch)
         {

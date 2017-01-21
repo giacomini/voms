@@ -37,6 +37,7 @@
 #include "acerrors.h"
 #include "attributes.h"
 #include "doio.h"
+#include "ssl_compat.h"
 
 #define ERROR(e) do { err = (e); goto err; } while (0)
 
@@ -323,7 +324,7 @@ int writeac(X509 *issuerc, STACK_OF(X509) *issuerstack, X509 *holder, EVP_PKEY *
 
   alg1 = X509_ALGOR_dup((X509_ALGOR*)X509_get0_tbs_sigalg(issuerc));
   {
-    X509_ALGOR const* sig_alg;
+    X509_ALGOR /*const*/* sig_alg;
     X509_get0_signature(NULL, &sig_alg, issuerc);
     alg2 = X509_ALGOR_dup((X509_ALGOR*)sig_alg);
   }

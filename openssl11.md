@@ -192,17 +192,35 @@ To transfer the public key from a request to a certificate, code such as
 
 has been replaced with
 
-    EVP_PKEY* pub_key = X509_REQ_get0_pubkey(req);
+    EVP_PKEY* pub_key = X509_REQ_get_pubkey(req);
     X509_set_pubkey(cert, pub_key);
+    EVP_PKEY_free(pub_key);
 
 The former code was a "move" of the public key from the request to the
 certificate, without any decoding. Although a function still exists to retrieve
 the key material (`X509_get_X509_PUBKEY`), there is no corresponding setter.
 
-The difference between `X509_REQ_get_pubkey` and `X509_REQ_get0_pubkey` is that
-the former increments a reference count, requiring the return `EVP_KEY` to be
-subsequently freed, whereas the latter returns a "view" of the internal public
-key.
+OpenSSL 1.1 has introduced another function to retrieve the public key
+from the request: `X509_REQ_get0_pubkey`. The difference between
+`X509_REQ_get_pubkey` and `X509_REQ_get0_pubkey` is that the former
+increments a reference count, requiring the returned `EVP_KEY` to be
+subsequently freed, whereas the latter returns a "view" of the
+internal public key and doesn't need to be freed. For compatibility
+with OpenSSL < 1.1 however `X509_REQ_get_pubkey` is used.
+
+The code to extract the public key from a certificate
+
+    X509_PUBKEY *key = X509_get_X509_PUBKEY(ucert);
+    EVP_PKEY* ucertpkey = X509_PUBKEY_get(key);
+
+has been replaced with
+
+    EVP_PKEY* ucertpkey = X509_get_pubkey(ucert);
+
+Also in this case OpenSSL 1.1 has introduced another function to
+extract the key without the need to later free it: `X509_get0_pubkey`,
+but it has not been used for compatibility reasons with previous
+versions of OpenSSL.
 
 To set various attributes of the certificate, code such as
 
@@ -309,29 +327,45 @@ The above code is replaced with an explicit construction of a
 BIO_METHOD object, which is then properly modified and used to
 construct the final BIO.
 
-    // the following line doesn't compile because BIO_s_socket()
-    // returns a BIO_METHOD const*, which is not modifiable; I haven't
-    // yet found a way to duplicate a BIO_METHOD...
-    BIO_METHOD* bio_method = BIO_s_socket();
-    writeb = BIO_meth_get_write(bio_method);
-    BIO_meth_set_write(bio_method, globusf_write);
-    readb = BIO_meth_get_read(bio_method);
-    BIO_meth_set_read(bio_method, globusf_read);
-    
-    bio = BIO_new(bio_method);
-    BIO_set_fd(bio, newsock, BIO_NOCLOSE);
-    (void)BIO_set_nbio(bio, 1);
+	int const biom_type = BIO_get_new_index();
+	static char const* const biom_name = "VOMS I/O";
+	BIO_METHOD* voms_biom = BIO_meth_new(biom_type|BIO_TYPE_SOURCE_SINK|BIO_TYPE_DESCRIPTOR, biom_name);
+	
+	BIO_METHOD const* sock_biom = BIO_s_socket();
+	
+	writeb = BIO_meth_get_write(const_cast<BIO_METHOD*>(sock_biom));
+	ret = BIO_meth_set_write(voms_biom, globusf_write);
+	
+	readb = BIO_meth_get_read(const_cast<BIO_METHOD*>(sock_biom));
+	ret = BIO_meth_set_read(voms_biom, globusf_read);
 
+    BIO_meth_set_puts(voms_biom, BIO_meth_get_puts(const_cast<BIO_METHOD*>(sock_biom)));
+    // and so on for all the other fields
 
+The `const_cast` is needed because the BIO API (and not only that one,
+in fact) is not consistently const-correct.
+
+## Stack management
+
+The way to declare/define a new stack of user-defined types and corresponding access functions has changed.
+
+With OpenSSL before v. 1.1 it is necessary to declare and then define
+all the functions to access a stack of a user-defined type. In VOMS
+there are a couple of macros to ease the job: `DECL_STACK` is used in
+a single header file to produce the declarations, `IMPL_STACK` is used
+in a single source file to produce the definitions.
+
+OpenSSL 1.1 instead offers the DEFINE_STACK_OF macro, that, given a type,
+generates the data structure and all the access functions, implemented
+`static inline`. This means that the macro can be used in a header
+file, which can then be included whenever needed.
+
+In order to have a common code base, the DECL_STACK and IMPL_STACK macros are always used, but when OpenSSL 1.1 is used, they are implemented as:
+
+    #define DECL_STACK(type) DEFINE_STACK_OF(type)
+    #define IMPL_STACK(type)
 
 ## Removal of macros
-
-The macro
-
-    #define PREDECLARE_STACK_OF(type) STACK_OF(type);
-
-doesn't exist any more. For the moment it has been included in the VOMS code
-base.
 
 The macro
 
@@ -394,35 +428,28 @@ becomes
 
     X509_STORE_set_verify_cb(store, proxy_verify_callback);
 
-`M_ASN1_INTEGER_dup` -> `ASN1_INTEGER_dup`
+## Encoding/decoding to/from ASN.1
 
-`M_ASN1_BIT_STRING_dup` -> `ASN1_STRING_dup`
+The functions responsible for the encoding/decoding of user-defined
+types, named `i2d_<type>`, `d2i_<type>`, `<type>_new` and
+`<type>_free`, were implemented in terms of the macros `M_ASN1_I2D_*`
+and `M_ASN1_D2I_*`, defined in `<openssl/asn1_mac.h>`. That header
+doesn't exist any more, so those functions have been generated with
+the macros `DECLARE_ASN1_FUNCTIONS`, `IMPLEMENT_ASN1_FUNCTIONS`,
+`ASN1_SEQUENCE`, `ASN1_SIMPLE`, `ASN1_SEQUENCE_OF`, etc., defined in
+`<openssl/asn1t.h>`.
 
+The encoding/decoding of standard (RFC3820) Proxy Certificates is actually
+available directly from OpenSSL. The encoding/decoding of pre-standard
+(draft) Proxy Certificates has been adapted from the Globus code.
 
+The encoding/decoding of Attribute Certificates and the VOMS
+extensions has been re-implemented from scratch.
 
+## Compatibility with OpenSSL 1.0.x
 
-## Encoding/decoding
-
-### Macros that don't exist anymore
-
-    M_ASN1_I2D_vars
-    M_ASN1_I2D_len
-    M_ASN1_I2D_seq_total
-    M_ASN1_I2D_put
-    M_ASN1_I2D_finish
-    M_ASN1_D2I_vars
-    M_ASN1_D2I_Init
-    M_ASN1_D2I_start_sequence
-    M_ASN1_D2I_get
-    M_ASN1_D2I_get_opt
-    M_ASN1_D2I_get_IMP_opt
-    M_ASN1_D2I_Finish
-    M_ASN1_New_Malloc
-    M_ASN1_New_Error
-    M_ASN1_I2D_len_EXP_opt
-    M_ASN1_I2D_put_EXP_opt
-    M_ASN1_D2I_get_EXP_opt
-
-### use DECLARE/IMPLEMENT_ASN1_FUNCTIONS
-
-XXX_new(), where XXX is a sequence, recursively `new`s its fields.
+Many of the changes listed above involve function calls that are not
+available in previous versions of OpenSSL. In order to have the same
+codebase, those functions have been copied (with some adaptation) into
+the VOMS code base and are conditionally enabled (see files
+`ssl-compat.h` and `ssl-compat.c`).

@@ -1,6 +1,7 @@
 #include "sslutils.h"
-#include "openssl/x509_vfy.h"
-#include "openssl/x509v3.h"
+#include <openssl/x509_vfy.h>
+#include <openssl/x509v3.h>
+#include "ssl_compat.h"
 
 #include <iostream>
 #include <cstdlib>
