@@ -565,6 +565,7 @@ int initEx(void)
     return 0;
   }
 
+#ifndef VOMS_USE_OPENSSL_EXT_CODE
   memset(auth, 0, sizeof(*auth));
 
   auth->ext_nid  = OBJ_txt2nid("authKeyId");
@@ -607,6 +608,7 @@ int initEx(void)
   targets->v2i      = (X509V3_EXT_V2I) NULL;
   targets->r2i      = (X509V3_EXT_R2I) NULL;
   targets->i2r      = (X509V3_EXT_I2R) NULL;
+#endif
 
   memset(acseq, 0, sizeof(*acseq));
   acseq->ext_nid  = OBJ_txt2nid("acseq");

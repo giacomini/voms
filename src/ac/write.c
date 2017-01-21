@@ -32,6 +32,7 @@
 #include <openssl/x509v3.h>
 #include <openssl/bn.h>
 #include <string.h>
+#include <assert.h>
 
 #include "newformat.h"
 #include "acerrors.h"
@@ -296,14 +297,50 @@ int writeac(X509 *issuerc, STACK_OF(X509) *issuerstack, X509 *holder, EVP_PKEY *
     ERROR(AC_ERR_NO_EXTENSION);
 
   /* Create several extensions */
+
+#ifndef VOMS_USE_OPENSSL_EXT_CODE
+
   if (make_and_push_ext(a, "noRevAvail","loc", 0))
     ERROR(AC_ERR_NO_EXTENSION);
+
+#else
+  {
+    X509_EXTENSION* ext = X509V3_EXT_conf(NULL, NULL, "noRevAvail", "");
+    assert(ext && "X509V3_EXT_conf failed");
+    int num = sk_X509_EXTENSION_push(a->acinfo->exts, ext);
+    assert(num && "sk_X509_EXTENSION_push");
+  }
+#endif
+
+#ifndef VOMS_USE_OPENSSL_EXT_CODE
 
   if (make_and_push_ext(a, "authKeyId", (char *)issuerc, 0))
     ERROR(AC_ERR_NO_EXTENSION);
 
+#else
+  {
+    X509V3_CTX ctx;
+    X509V3_set_ctx(&ctx, issuerc, NULL, NULL, NULL, 0);
+    X509_EXTENSION* ext = X509V3_EXT_conf(NULL, &ctx, "authorityKeyIdentifier", "keyid:always");
+    assert(ext && "X509V3_EXT_conf failed");
+    int num = sk_X509_EXTENSION_push(a->acinfo->exts, ext);
+    assert(num && "sk_X509_EXTENSION_push");
+  }
+#endif
+
+#ifndef VOMS_USE_OPENSSL_EXT_CODE
+
   if (t && make_and_push_ext(a, "targetInformation", t, 1))
     ERROR(AC_ERR_NO_EXTENSION);
+
+#else
+  {
+    X509_EXTENSION* ext = X509V3_EXT_conf(NULL, NULL, "targetInformation", t);
+    assert(ext && "X509V3_EXT_conf failed");
+    int num = sk_X509_EXTENSION_push(a->acinfo->exts, ext);
+    assert(num && "sk_X509_EXTENSION_push");
+  }
+#endif
 
   if (extensions) {
     int proxyindex = 0;
