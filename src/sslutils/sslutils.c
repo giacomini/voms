@@ -476,8 +476,8 @@ ERR_load_prxyerr_strings(
         OBJ_create("1.3.6.1.4.1.3536.1.1.1.2","DELEGATE","Delegate");
         OBJ_create("1.3.6.1.4.1.3536.1.1.1.3","RESTRICTEDRIGHTS",
                    "RestrictedRights");
-#warning the OBJ with OID 0.9.2342.19200300.100.1.1 already exists
-        /* OBJ_create("0.9.2342.19200300.100.1.1","USERID","userId"); */
+        /* the following is already available in OpenSSL... */
+        OBJ_create("0.9.2342.19200300.100.1.1","USERID","userId");
 
         ERR_load_strings(ERR_USER_LIB_PRXYERR_NUMBER,prxyerr_str_functs);
         ERR_load_strings(ERR_USER_LIB_PRXYERR_NUMBER,prxyerr_str_reasons);
@@ -1473,7 +1473,8 @@ proxy_verify_init(
     pvd->cert_chain = NULL;
     pvd->limited_proxy = 0;
     pvd->multiple_limited_proxy_ok = 0;
-#warning pvd->cert_store/recursive_depth are not set
+    pvd->cert_store = NULL;
+    pvd->recursive_depth = 0;
 }
 
 /**********************************************************************
