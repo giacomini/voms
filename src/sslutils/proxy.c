@@ -441,7 +441,6 @@ struct VOMSProxy *VOMS_MakeProxy(struct VOMSProxyArguments *args, int *warning, 
     }
 
     if (OBJ_txt2nid(policylang) == 0) {
-#warning improve OBJ_create of the policy language
       OBJ_create(policylang, policylang, policylang);
     }
 

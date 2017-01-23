@@ -1055,7 +1055,6 @@ proxy_sign_ext(
 {
     EVP_PKEY *                          new_public_key = NULL;
     EVP_PKEY *                          tmp_public_key = NULL;
-    X509_EXTENSION *                    extension = NULL;
     time_t                              time_diff, time_now, time_after;
     ASN1_UTCTIME *                      asn1_time = NULL;
     int                                 i;

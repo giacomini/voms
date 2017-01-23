@@ -611,8 +611,7 @@ void Client::CleanAll()
   free(outfile);
   listfree((char **)aclist, (freefn)AC_free);
 
-  if (v)
-    delete v;
+  delete v;
 
   OBJ_cleanup();
 
