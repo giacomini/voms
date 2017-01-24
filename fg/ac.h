@@ -42,19 +42,9 @@ typedef struct ACVAL {
   ASN1_GENERALIZEDTIME *notAfter;
 } AC_VAL;
 
-typedef ASN1_OCTET_STRING AC_IETFATTRVAL;
-DEFINE_STACK_OF(AC_IETFATTRVAL);
-typedef STACK_OF(AC_IETFATTRVAL) OctetStrings;
-
-// DEFINE_STACK_OF(ASN1_OCTET_STRING);
-// typedef STACK_OF(ASN1_OCTET_STRING) OctetStrings;
-
-DECLARE_ASN1_FUNCTIONS(OctetStrings);
-
 typedef struct ACIETFATTR {
   GENERAL_NAMES   *names;
-  //  STACK_OF(AC_IETFATTRVAL) *values;
-  OctetStrings *values;
+  STACK_OF(ASN1_OCTET_STRING) *values;
 } AC_IETFATTR;
 
 typedef struct ACTARGET {

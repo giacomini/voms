@@ -42,8 +42,18 @@ int i2d_AC_fp(FILE *fp, AC* s)
     return ASN1_item_i2d_fp(ASN1_ITEM_rptr(AC), fp, s);
 }
 
+template<class T> struct TD;
+
+IMPLEMENT_ASN1_PRINT_FUNCTION(AC)
+
 int main()
 { 
+  // auto n = ASN1_NULL_new();
+  // std::cout << n << '\n';
+
+  // auto ac = AC_new();
+  // auto out = BIO_new_fp(stdout, BIO_NOCLOSE);
+
   std::ifstream f("ac.der", std::ios::binary);
   assert(f && "failed to open file");
   f.unsetf(std::ios::skipws);
@@ -55,6 +65,7 @@ int main()
   assert(data.size() == 2272);
   // std::cout << data.size() << '\n';
 
+#if 0  
   {
     auto p = data.data() + 236;
     auto l = 220;
@@ -179,15 +190,20 @@ int main()
     auto o = d2i_X509_EXTENSIONS(0, &p, l);
     assert(o != nullptr);
   }
+#endif
   {
     auto p = data.data();
     auto l = 2272;
     auto o = d2i_AC(0, &p, l);
     assert(o != nullptr);
-
-    FILE* f = fopen("ac-out.der", "wb");
-    assert(f);
-    auto e = i2d_AC_fp(f, o);
-    assert(e);
+    std::cout << o << '\n';
+    AC_free(o);
+    AC_free(o);
+    // AC_print_ctx(out, o, 0, 0);
+    
+    // FILE* f = fopen("ac-out.der", "wb");
+    // assert(f);
+    // auto e = i2d_AC_fp(f, o);
+    // assert(e);
   }
 }
