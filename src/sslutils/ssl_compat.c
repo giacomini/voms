@@ -342,4 +342,22 @@ int BIO_meth_set_callback_ctrl(BIO_METHOD *biom, long (*callback_ctrl) (BIO *, i
   return 1;
 }
 
+#if OPENSSL_VERSION_NUMBER < 0x10002000L
+
+int X509_get_signature_nid(const X509 *x)
+{
+  return OBJ_obj2nid(x->sig_alg->algorithm);
+}
+
+void X509_get0_signature(const ASN1_BIT_STRING **psig,
+                         const X509_ALGOR **palg, const X509 *x)
+{
+  if (psig)
+    *psig = x->signature;
+  if (palg)
+    *palg = x->sig_alg;
+}
+
+#endif
+
 #endif

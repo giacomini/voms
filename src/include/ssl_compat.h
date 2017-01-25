@@ -59,6 +59,14 @@ int BIO_meth_set_destroy(BIO_METHOD *biom, int (*destroy) (BIO *));
 long (*BIO_meth_get_callback_ctrl(BIO_METHOD *biom))(BIO *, int, bio_info_cb *);
 int BIO_meth_set_callback_ctrl(BIO_METHOD *biom, long (*callback_ctrl) (BIO *, int, bio_info_cb *));
 
+#if OPENSSL_VERSION_NUMBER < 0x10002000L
+
+int X509_get_signature_nid(const X509 *x);
+void X509_get0_signature(const ASN1_BIT_STRING **psig,
+                         const X509_ALGOR **palg, const X509 *x);
+
+#endif
+
 #ifdef __cplusplus
 }
 #endif
